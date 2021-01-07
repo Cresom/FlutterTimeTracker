@@ -4,33 +4,33 @@
 import 'package:intl/intl.dart';
 import 'dart:convert' as convert;
 
-final DateFormat _dateFormatter = DateFormat("yyyy-MM-dd HH:mm:ss");
+final DateFormat _dateFormatter = DateFormat("yyyy-MM-ddTHH:mm:ss");
 
 abstract class Activity {
   int id;
   String name;
   DateTime initialDate;
   DateTime finalDate;
-  int duration;
+  String duration;
   List<dynamic> children = List<dynamic>();
 
   Activity.fromJson(Map<String, dynamic> json)
             : id = json['id'],
-            name = json['name'],
-            initialDate = json['initialDate']==null ? null : _dateFormatter.parse(json['initialDate']),
-            finalDate = json['finalDate']==null ? null : _dateFormatter.parse(json['finalDate']),
-            duration = json['duration'];
+            name = json['description'],
+            initialDate = json['activityDate'] == null ? null : json['activityDate']['startDate']==null ? null : _dateFormatter.parse(json['activityDate']['startDate']),
+            finalDate = json['activityDate'] == null ? null : json['activityDate']['endDate']==null ? null : _dateFormatter.parse(json['activityDate']['endDate']),
+            duration = json['activityDate'] == null ? "PT0S" : json['activityDate']['intervalDuration'];
 }
 
 class Project extends Activity {
   Project.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
-    if (json.containsKey('activities')) {
+    if (json.containsKey('childrenActivities')) {
       // json has only 1 level because depth=1 or 0 in time_tracker
-      for (Map<String, dynamic> jsonChild in json['activities']) {
-        if (jsonChild['class'] == "project") {
+      for (Map<String, dynamic> jsonChild in json['childrenActivities']) {
+        if (jsonChild['type'] == "com.DSTeam.Fita1.Project") {
           children.add(Project.fromJson(jsonChild));
           // condition on key avoids infinite recursion
-        } else if (jsonChild['class'] == "task") {
+        } else if (jsonChild['type'] == "com.DSTeam.Fita1.Task") {
           children.add(Task.fromJson(jsonChild));
         } else {
           assert(false);
@@ -43,9 +43,11 @@ class Project extends Activity {
 class Task extends Activity {
   bool active;
   Task.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
-    active = json['active'];
+    active = json['activityDate'] != null;
+    int id = 0;
     for (Map<String, dynamic> jsonChild in json['intervals']) {
-      children.add(Interval.fromJson(jsonChild));
+      children.add(Interval.fromJson(jsonChild, id));
+      id++;
     }
   }
 }
@@ -54,15 +56,15 @@ class Interval {
   int id;
   DateTime initialDate;
   DateTime finalDate;
-  int duration;
+  String duration;
   bool active;
 
-  Interval.fromJson(Map<String, dynamic> json)
-    : id = json['id'],
-    initialDate = json['initialDate']==null ? null : _dateFormatter.parse(json['initialDate']),
-    finalDate = json['finalDate']==null ? null : _dateFormatter.parse(json['finalDate']),
-    duration = json['duration'],
-    active = json['active'];
+  Interval.fromJson(Map<String, dynamic> json, int id)
+    : id = id,
+      initialDate = json['activityDate'] == null ? null : json['activityDate']['startDate']==null ? null : _dateFormatter.parse(json['activityDate']['startDate']),
+      finalDate = json['activityDate'] == null ? null : json['activityDate']['endDate']==null ? null : _dateFormatter.parse(json['activityDate']['endDate']),
+      duration = json['activityDate'] == null ? "PT0S" : json['activityDate']['intervalDuration'],
+      active = json['activityDate'] != null;
 }
 
 class Tree {
@@ -71,9 +73,9 @@ class Tree {
   Tree(Map<String, dynamic> dec) {
     // 1 level tree, root and children only, root is either Project or Task. If Project
     // children are Project or Task, that is, Activity. If root is Task, children are Instance.
-    if (dec['class'] == "project") {
+    if (dec['type'] == "com.DSTeam.Fita1.Project") {
       root = Project.fromJson(dec);
-    } else if (dec['class'] == "task") {
+    } else if (dec['type'] == "com.DSTeam.Fita1.Task") {
       root = Task.fromJson(dec);
     } else {
       assert(false);

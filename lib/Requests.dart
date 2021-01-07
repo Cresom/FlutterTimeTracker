@@ -1,6 +1,6 @@
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
-import 'Tree.dart';
+import 'package:flutter_timetracker/Tree.dart';
 
 final http.Client client = http.Client();
 // better than http.get() if multiple requests to the same server

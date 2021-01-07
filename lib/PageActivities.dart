@@ -6,6 +6,7 @@ import 'package:flutter_timetracker/Tree.dart' hide getTree;
 import 'PageIntervals.dart';
 import 'dart:async';
 
+
 class PageActivities extends StatefulWidget {
   int id;
   PageActivities(this.id);
@@ -24,7 +25,7 @@ class _PageActivitiesState extends State<PageActivities> {
 
   @override
   void initState() {
-    super.initState();
+    super.initState()     ;
     id = widget.id;
     futureTree = getTree(id);
     _activateTimer();
@@ -78,7 +79,10 @@ class _PageActivitiesState extends State<PageActivities> {
   }
 
   Widget _buildRow(Activity activity, int index) {
-    String strDuration = Duration(seconds: activity.duration).toString().split('.').first;
+
+    final intRegex = RegExp(r'\s+(\d+)\s+', multiLine: true);
+    String strDuration = intRegex.allMatches(activity.duration).map((m) => m.group(0)).toString();
+
     // split by '.' and taking first element of resulting list removes the microseconds part
     if (activity is Project) {
       return ListTile(
