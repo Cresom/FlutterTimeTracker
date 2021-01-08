@@ -11,7 +11,7 @@ abstract class Activity {
   String name;
   DateTime initialDate;
   DateTime finalDate;
-  String duration;
+  int duration;
   List<dynamic> children = List<dynamic>();
 
   Activity.fromJson(Map<String, dynamic> json)
@@ -19,7 +19,7 @@ abstract class Activity {
             name = json['description'],
             initialDate = json['activityDate'] == null ? null : json['activityDate']['startDate']==null ? null : _dateFormatter.parse(json['activityDate']['startDate']),
             finalDate = json['activityDate'] == null ? null : json['activityDate']['endDate']==null ? null : _dateFormatter.parse(json['activityDate']['endDate']),
-            duration = json['activityDate'] == null ? "PT0S" : json['activityDate']['intervalDuration'];
+            duration = json['elapsedTime'] == null ? 0 : json['elapsedTime']['totalElapsedSeconds'];
 }
 
 class Project extends Activity {
@@ -56,14 +56,14 @@ class Interval {
   int id;
   DateTime initialDate;
   DateTime finalDate;
-  String duration;
+  int duration;
   bool active;
 
   Interval.fromJson(Map<String, dynamic> json, int id)
     : id = id,
       initialDate = json['activityDate'] == null ? null : json['activityDate']['startDate']==null ? null : _dateFormatter.parse(json['activityDate']['startDate']),
       finalDate = json['activityDate'] == null ? null : json['activityDate']['endDate']==null ? null : _dateFormatter.parse(json['activityDate']['endDate']),
-      duration = json['activityDate'] == null ? "PT0S" : json['activityDate']['intervalDuration'],
+      duration = json['activityDate'] == null ? 0 : json['activityDate']['totalElapsedSeconds'],
       active = json['activityDate'] != null;
 }
 

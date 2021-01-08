@@ -83,8 +83,7 @@ class _PageIntervalsState extends State<PageIntervals> {
 
   Widget _buildRow(Tree.Interval interval, int index) {
 
-    final intRegex = RegExp(r'\s+(\d+)\s+', multiLine: true);
-    String strDuration = intRegex.allMatches(interval.duration).map((m) => m.group(0)).toString();
+    String strDuration = Duration(seconds: interval.duration).toString().split('.').first;
 
     String strInitialDate = interval.initialDate.toString().split('.')[0];
     // this removes the microseconds part
