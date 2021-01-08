@@ -12,6 +12,7 @@ abstract class Activity {
   DateTime initialDate;
   DateTime finalDate;
   int duration;
+  String tags;
   List<dynamic> children = List<dynamic>();
 
   Activity.fromJson(Map<String, dynamic> json)
@@ -19,11 +20,14 @@ abstract class Activity {
             name = json['description'],
             initialDate = json['activityDate'] == null ? null : json['activityDate']['startDate']==null ? null : _dateFormatter.parse(json['activityDate']['startDate']),
             finalDate = json['activityDate'] == null ? null : json['activityDate']['endDate']==null ? null : _dateFormatter.parse(json['activityDate']['endDate']),
-            duration = json['elapsedTime'] == null ? 0 : json['elapsedTime']['totalElapsedSeconds'];
+            duration = json['elapsedTime'] == null ? 0 : json['elapsedTime']['totalElapsedSeconds'],
+            tags = json['tags'].join(";");
 }
 
 class Project extends Activity {
+  bool active;
   Project.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
+    active = json['active'];
     if (json.containsKey('childrenActivities')) {
       // json has only 1 level because depth=1 or 0 in time_tracker
       for (Map<String, dynamic> jsonChild in json['childrenActivities']) {

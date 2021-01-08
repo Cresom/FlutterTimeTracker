@@ -10,7 +10,9 @@ import 'dart:async';
 
 class PageActivities extends StatefulWidget {
   int id;
-  PageActivities(this.id);
+  String parentName;
+
+  PageActivities(this.id, this.parentName);
 
   @override
   _PageActivitiesState createState() => _PageActivitiesState();
@@ -18,7 +20,10 @@ class PageActivities extends StatefulWidget {
 
 class _PageActivitiesState extends State<PageActivities> {
   int id;
+  String parentName;
   Future<Tree> futureTree;
+
+  String actualName;
 
   Timer _timer;
   static const int periodeRefresh = 2;
@@ -28,6 +33,7 @@ class _PageActivitiesState extends State<PageActivities> {
   void initState() {
     super.initState();
     id = widget.id;
+    parentName = widget.parentName;
     futureTree = getTree(id);
     _activateTimer();
   }
@@ -40,9 +46,10 @@ class _PageActivitiesState extends State<PageActivities> {
       builder: (context, snapshot) {
         // anonymous function
         if (snapshot.hasData) {
+          actualName = snapshot.data.root.id == 0 ? "" : snapshot.data.root.name;
           return Scaffold(
             appBar: AppBar(
-              title: (snapshot.data.root.name == "Root project") ? Text("Temporizador de tareas") : Text(snapshot.data.root.name),
+              title: (snapshot.data.root.name == "Root project") ? Text("Temporizador de tareas") : Text(parentName == "" ? snapshot.data.root.name : "..." + parentName + "\\" + snapshot.data.root.name),
               leading: GestureDetector(
                 onTap: () {
                   if (Navigator.of(context).canPop())
@@ -59,7 +66,7 @@ class _PageActivitiesState extends State<PageActivities> {
                         print("pop");
                         Navigator.of(context).pop();
                       }
-                      PageActivities(0);
+                      PageActivities(0, "");
                     }),
                 //TODO other actions
               ],
@@ -81,7 +88,7 @@ class _PageActivitiesState extends State<PageActivities> {
                       child: Icon(Icons.note_add_outlined),
                       heroTag: null,
                       onPressed: () {
-                        _navigateToNew();
+                        _navigateToNew(snapshot.data.root.id);
                       },
                     ),
                   ]
@@ -107,10 +114,12 @@ class _PageActivitiesState extends State<PageActivities> {
     // split by '.' and taking first element of resulting list removes the microseconds part
     if (activity is Project) {
       return ListTile(
-        title: Text('${activity.name}'),
-        leading: Icon(Icons.folder_outlined),
-        trailing: Text('$strDuration'),
-        onTap: () => _navigateDownActivities(activity.id),
+        title: Text('${activity.name}',
+            style: TextStyle(fontWeight: activity.active ? FontWeight.bold : FontWeight.normal, color: activity.active ? Colors.blue : Colors.black)),
+        leading: Icon(Icons.folder_outlined, color: activity.active ? Colors.blue : Colors.black),
+        trailing: Text('$strDuration',
+            style: TextStyle(fontWeight: activity.active ? FontWeight.bold : FontWeight.normal, color: activity.active ? Colors.blue : Colors.black)),
+        onTap: () => _navigateDownActivities(activity.id, activity.id == 0 ? "" : actualName),
         onLongPress: () {
           _navigateToInfo(activity);
         },
@@ -122,9 +131,10 @@ class _PageActivitiesState extends State<PageActivities> {
       trailing = Row(
           mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text('$strDuration'),
+                  Text('$strDuration',
+                      style: TextStyle(fontWeight: activity.active ? FontWeight.bold : FontWeight.normal, color: activity.active ? Colors.blue : Colors.black)),
                   IconButton(
-                    icon: Icon(task.active ? Icons.pause : Icons.play_arrow),
+                    icon: Icon(task.active ? Icons.pause : Icons.play_arrow, color: activity.active ? Colors.blue : Colors.black),
                     onPressed: () {
                       task.active ? stop(task.id) : start(task.id);
                       _refresh(); // to show immediately that task has started
@@ -135,10 +145,11 @@ class _PageActivitiesState extends State<PageActivities> {
           ]);
 
       return ListTile(
-        title: Text('${activity.name}'),
-        leading: Icon(Icons.note_outlined),
+        title: Text('${activity.name}',
+            style: TextStyle(fontWeight: activity.active ? FontWeight.bold : FontWeight.normal, color: activity.active ? Colors.blue : Colors.black)),
+        leading: Icon(Icons.note_outlined, color: activity.active ? Colors.blue : Colors.black),
         trailing: trailing,
-        onTap: () => _navigateDownIntervals(activity.id),
+        onTap: () => _navigateDownIntervals(activity.id, activity.id == 0 ? "" : actualName),
         onLongPress: () {
           _navigateToInfo(activity);
         },
@@ -151,34 +162,34 @@ class _PageActivitiesState extends State<PageActivities> {
     setState(() {});
   }
 
-  void _navigateDownActivities(int childId) {
+  void _navigateDownActivities(int childId, String parentName) {
     _timer.cancel();
     // we can not do just _refresh() because then the up arrow doesnt appear in the appbar
     Navigator.of(context)
         .push(MaterialPageRoute<void>(
-      builder: (context) => PageActivities(childId),
+      builder: (context) => PageActivities(childId, parentName),
     )).then( (var value) {
       _activateTimer();
       _refresh();
     });
   }
 
-  void _navigateDownIntervals(int childId) {
+  void _navigateDownIntervals(int childId, String parentName) {
     _timer.cancel();
     Navigator.of(context)
         .push(MaterialPageRoute<void>(
-      builder: (context) => PageIntervals(childId),
+      builder: (context) => PageIntervals(childId, parentName),
     )).then( (var value) {
       _activateTimer();
       _refresh();
     });
   }
 
-  void _navigateToNew() {
+  void _navigateToNew(int parentId) {
     _timer.cancel();
     Navigator.of(context)
         .push(MaterialPageRoute<void>(
-      builder: (context) => PageNew(),
+      builder: (context) => PageNew(parentId),
     )).then( (var value) {
       _activateTimer();
       _refresh();

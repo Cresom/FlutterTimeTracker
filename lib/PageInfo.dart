@@ -21,6 +21,7 @@ class _PageInfoState extends State<PageInfo> {
 
   final myControllerStartDate = TextEditingController();
   final myControllerEndDate = TextEditingController();
+  final myControllerTags = TextEditingController();
 
   ActivityType activityType = ActivityType.Project;
 
@@ -40,6 +41,7 @@ class _PageInfoState extends State<PageInfo> {
     myController.text = activity.name;
     myControllerStartDate.text = strInitialDate;
     myControllerEndDate.text = strFinalDate;
+    myControllerTags.text = activity.tags;
 
     super.initState();
   }
@@ -93,6 +95,16 @@ class _PageInfoState extends State<PageInfo> {
                       focusNode: new AlwaysDisabledFocusNode(),
                       value: ActivityType.Task,
                       groupValue: activityType,
+                    ),
+                  ),
+                  ListTile(title: new Text("Tags")),
+                  ListTile(
+                    leading: const Icon(Icons.tag),
+                    title: new TextFormField(
+                      focusNode: new AlwaysDisabledFocusNode(),
+                      decoration: new InputDecoration(
+                      ),
+                      controller: myControllerTags,
                     ),
                   ),
                   ListTile(title: new Text("Fecha inicial")),

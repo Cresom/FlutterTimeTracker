@@ -6,7 +6,9 @@ import 'package:flutter_timetracker/Requests.dart';
 
 class PageIntervals extends StatefulWidget {
   int id;
-  PageIntervals(this.id);
+  String parentName;
+
+  PageIntervals(this.id, this.parentName);
 
   @override
   _PageIntervalsState createState() => _PageIntervalsState();
@@ -15,6 +17,7 @@ class PageIntervals extends StatefulWidget {
 class _PageIntervalsState extends State<PageIntervals> {
   int id;
   Future<Tree.Tree> futureTree;
+  String parentName;
 
   Timer _timer;
   static const int periodeRefresh = 2;
@@ -23,6 +26,7 @@ class _PageIntervalsState extends State<PageIntervals> {
   void initState() {
     super.initState();
     id = widget.id;
+    parentName = widget.parentName;
     futureTree = getTree(id);
     _activateTimer();
   }
@@ -38,7 +42,7 @@ class _PageIntervalsState extends State<PageIntervals> {
           int numChildren = snapshot.data.root.children.length;
           return Scaffold(
             appBar: AppBar(
-              title: Text(snapshot.data.root.name),
+              title: Text(parentName == "" ? snapshot.data.root.name : parentName + "\\" + snapshot.data.root.name),
               actions: <Widget>[
                 IconButton(icon: Icon(Icons.home),
                     onPressed: () {
@@ -46,7 +50,7 @@ class _PageIntervalsState extends State<PageIntervals> {
                         print("pop");
                         Navigator.of(context).pop();
                       }
-                      PageIntervals(0);
+                      PageIntervals(0, snapshot.data.root.name);
                     })
               ],
             ),

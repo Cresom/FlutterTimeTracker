@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_timetracker/Requests.dart' as req;
 
+import 'PageInfo.dart';
+
 class PageNew extends StatefulWidget {
-  PageNew();
+  int idParent;
+
+  PageNew(this.idParent);
 
   @override
   _PageNewState createState() => _PageNewState();
@@ -12,11 +16,12 @@ class PageNew extends StatefulWidget {
 enum ActivityType { Project, Task }
 
 class _PageNewState extends State<PageNew> {
-
+  int idParent;
   Future<Map<dynamic, dynamic>> projects;
 
   final myController = TextEditingController();
   final myControllerTags = TextEditingController();
+  final myControllerParent = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
   ActivityType activityType = ActivityType.Project;
@@ -26,6 +31,7 @@ class _PageNewState extends State<PageNew> {
 
   @override
   void initState() {
+    idParent = widget.idParent;
     super.initState();
   }
 
@@ -41,6 +47,8 @@ class _PageNewState extends State<PageNew> {
         )));
 
         dropDownMenuItems = items;
+        currentProject = dropDownMenuItems.firstWhere((element) => idParent == int.parse(element.value.split("-")[0].trim())).value;
+        myControllerParent.text = currentProject.toString();
 
         return Scaffold(
             resizeToAvoidBottomPadding: false,
@@ -119,11 +127,12 @@ class _PageNewState extends State<PageNew> {
                 ),
                 ListTile(title: new Text("Proyecto padre")),
                 ListTile(
-                  title: new DropdownButton(
-                    isExpanded: true,
-                    value: currentProject,
-                    items: dropDownMenuItems,
-                    onChanged: changedDropDownItem,
+                  leading: const Icon(Icons.folder),
+                  title: new TextFormField(
+                    focusNode: new AlwaysDisabledFocusNode(),
+                    decoration: new InputDecoration(
+                    ),
+                    controller: myControllerParent,
                   ),
                 ),
                 Padding(
