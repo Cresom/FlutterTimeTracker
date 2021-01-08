@@ -1,6 +1,8 @@
 import 'dart:convert' as convert;
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_timetracker/Tree.dart';
+import 'package:flutter/material.dart';
 
 final http.Client client = http.Client();
 // better than http.get() if multiple requests to the same server
@@ -31,6 +33,19 @@ Future<Tree> getTree(int id) async {
   }
 }
 
+Future<Map> getProjects() async {
+  String uri = "$baseUrl/projects";
+  final response = await client.get(uri);
+  if (response.statusCode == 200) {
+    print("statusCode=$response.statusCode");
+    Map<dynamic, dynamic> decoded = convert.jsonDecode(response.body);
+    return decoded;
+  } else {
+    print("statusCode=$response.statusCode");
+    throw Exception('Failed to get children');
+  }
+}
+
 Future<void> start(int id) async {
   String uri = "$baseUrl/start?$id";
   final response = await client.get(uri);
@@ -52,3 +67,31 @@ Future<void> stop(int id) async {
     throw Exception('Failed to get children');
   }
 }
+
+  Future<void> addTask(String description, String tags, int parentId) async {
+    if(tags == "")
+      tags = "null";
+
+    String uri = "$baseUrl/addTask?$description&$tags&$parentId";
+    final response = await client.get(uri);
+    if (response.statusCode == 200) {
+      print("statusCode=$response.statusCode");
+    } else {
+      print("statusCode=$response.statusCode");
+      throw Exception('Failed to get children');
+    }
+  }
+
+  Future<void> addProject(String description, String tags, int parentId) async {
+    if(tags == "")
+      tags = "null";
+
+    String uri = "$baseUrl/addProject?$description&$tags&$parentId";
+    final response = await client.get(uri);
+    if (response.statusCode == 200) {
+      print("statusCode=$response.statusCode");
+    } else {
+      print("statusCode=$response.statusCode");
+      throw Exception('Failed to get children');
+    }
+  }

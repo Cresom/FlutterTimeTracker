@@ -90,6 +90,7 @@ class _PageIntervalsState extends State<PageIntervals> {
     String strFinalDate = interval.finalDate.toString().split('.')[0];
     return ListTile(
       title: Text('from ${strInitialDate} to ${strFinalDate}'),
+      leading: Icon(Icons.access_alarm),
       trailing: Text('$strDuration'),
     );
   }

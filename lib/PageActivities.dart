@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_timetracker/Requests.dart';
 import 'package:flutter_timetracker/Tree.dart' hide getTree;
 
+import 'PageInfo.dart';
+import 'PageNew.dart';
 import 'PageIntervals.dart';
 import 'dart:async';
-
 
 class PageActivities extends StatefulWidget {
   int id;
@@ -41,19 +42,29 @@ class _PageActivitiesState extends State<PageActivities> {
         if (snapshot.hasData) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(snapshot.data.root.name),
+              title: (snapshot.data.root.name == "Root project") ? Text("Temporizador de tareas") : Text(snapshot.data.root.name),
+              leading: GestureDetector(
+                onTap: () {
+                  if (Navigator.of(context).canPop())
+                    Navigator.of(context).pop();
+                  },
+                child: Icon(
+                  (snapshot.data.root.name == "Root project") ? Icons.menu : Icons.keyboard_return_outlined,  // add custom icons also
+                ),
+              ),
               actions: <Widget>[
-            IconButton(icon: Icon(Icons.home),
-              onPressed: () {
-                while(Navigator.of(context).canPop()) {
-                  print("pop");
-                  Navigator.of(context).pop();
-                }
-                PageActivities(0);
-              }),
+                IconButton(icon: Icon(Icons.home),
+                    onPressed: () {
+                      while(Navigator.of(context).canPop()) {
+                        print("pop");
+                        Navigator.of(context).pop();
+                      }
+                      PageActivities(0);
+                    }),
                 //TODO other actions
               ],
             ),
+
             body: ListView.separated(
               // it's like ListView.builder() but better because it includes a separator between items
               padding: const EdgeInsets.all(16.0),
@@ -63,6 +74,18 @@ class _PageActivitiesState extends State<PageActivities> {
               separatorBuilder: (BuildContext context, int index) =>
               const Divider(),
             ),
+              floatingActionButton: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FloatingActionButton(
+                      child: Icon(Icons.note_add_outlined),
+                      heroTag: null,
+                      onPressed: () {
+                        _navigateToNew();
+                      },
+                    ),
+                  ]
+              )
           );
         } else if (snapshot.hasError) {
           return Text("${snapshot.error}");
@@ -85,27 +108,39 @@ class _PageActivitiesState extends State<PageActivities> {
     if (activity is Project) {
       return ListTile(
         title: Text('${activity.name}'),
+        leading: Icon(Icons.folder_outlined),
         trailing: Text('$strDuration'),
         onTap: () => _navigateDownActivities(activity.id),
+        onLongPress: () {
+          _navigateToInfo(activity);
+        },
       );
     } else if (activity is Task) {
       Task task = activity as Task;
       // at the moment is the same, maybe changes in the future
       Widget trailing;
-      trailing = Text('$strDuration');
+      trailing = Row(
+          mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text('$strDuration'),
+                  IconButton(
+                    icon: Icon(task.active ? Icons.pause : Icons.play_arrow),
+                    onPressed: () {
+                      task.active ? stop(task.id) : start(task.id);
+                      _refresh(); // to show immediately that task has started
+                    },
+                  ),
+
+
+          ]);
 
       return ListTile(
         title: Text('${activity.name}'),
+        leading: Icon(Icons.note_outlined),
         trailing: trailing,
         onTap: () => _navigateDownIntervals(activity.id),
         onLongPress: () {
-          if ((activity as Task).active) {
-            stop(activity.id);
-            _refresh(); // to show immediately that task has started
-          } else {
-            start(activity.id);
-            _refresh(); // to show immediately that task has stopped
-          }
+          _navigateToInfo(activity);
         },
       );
     }
@@ -138,6 +173,29 @@ class _PageActivitiesState extends State<PageActivities> {
       _refresh();
     });
   }
+
+  void _navigateToNew() {
+    _timer.cancel();
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(
+      builder: (context) => PageNew(),
+    )).then( (var value) {
+      _activateTimer();
+      _refresh();
+    });
+  }
+
+  void _navigateToInfo(Activity activity) {
+    _timer.cancel();
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(
+      builder: (context) => PageInfo(activity),
+    )).then( (var value) {
+      _activateTimer();
+      _refresh();
+    });
+  }
+
 
   void _activateTimer() {
     _timer = Timer.periodic(Duration(seconds: periodeRefresh), (Timer t) {
